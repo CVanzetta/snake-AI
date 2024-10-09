@@ -1,5 +1,7 @@
-import math
+# agent.py
+
 import random
+import math
 
 class Agent:
     def __init__(self, input_size, hidden_size=10, genome=None):
@@ -15,8 +17,6 @@ class Agent:
             self.genome = genome
 
         # Décomposer le génome en poids pour les couches
-        self.weights_input_hidden = []
-        self.weights_hidden_output = []
         self.decode_genome()
 
     def decode_genome(self):

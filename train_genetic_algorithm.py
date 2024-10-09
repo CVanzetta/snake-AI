@@ -1,8 +1,8 @@
 # train_genetic_algorithm.py
 
-import os  # Importer os pour vérifier l'existence du fichier
+import os
 import random
-import pickle  # Importer pickle pour la sauvegarde et le chargement
+import pickle
 from snake_game_logic import SnakeGameLogic
 from agent import Agent
 
@@ -11,7 +11,12 @@ def evaluate_agents(population, grid_size=10, range_vision=1):
     for agent in population:
         game = SnakeGameLogic(grid_size=grid_size, agent=agent, range_vision=range_vision)
         game.play()
-        fitness = game.score * 1000 + game.steps
+        # Calculer la distance moyenne au fruit
+        average_distance = game.total_distance_to_fruit / game.steps if game.steps > 0 else 0
+        # Calculer le nombre de mouvements répétitifs
+        repetitive_moves = game.count_repetitive_moves()
+        # Calculer la fitness
+        fitness = (game.score * 1000) - (average_distance * 5) - (repetitive_moves * 100)
         scores.append((agent, fitness))
     return scores
 
@@ -31,7 +36,7 @@ def mutate(agent, mutation_rate=0.1):
     for gene in agent.genome:
         if random.random() < mutation_rate:
             gene += random.uniform(-0.5, 0.5)
-            gene = max(-1, min(1, gene))  # Limiter les valeurs entre -1 et 1
+            gene = max(-1, min(1, gene))
         new_genome.append(gene)
     agent.genome = new_genome
 
@@ -43,39 +48,32 @@ def generate_new_population(selected_agents, population_size, input_size):
         mutate(child)
         new_population.append(child)
     # Introduire de nouveaux agents aléatoires pour maintenir la diversité
-    num_random_agents = int(0.05 * population_size)  # 5% de nouveaux agents
+    num_random_agents = int(0.05 * population_size)
     for _ in range(num_random_agents):
         new_population[random.randint(0, population_size - 1)] = Agent(input_size=input_size)
     return new_population
 
-def train_genetic_algorithm(generations=200, population_size=100, grid_size=10, range_vision=1):
-    input_size = (2 * range_vision + 1) ** 2 - 1
+def train_genetic_algorithm(generations=50, population_size=100, grid_size=10, range_vision=1):
+    input_size = ((2 * range_vision + 1) ** 2 - 1) + 2  # Ajouter 2 pour la direction du fruit
 
-    # Chemin du fichier de sauvegarde de la population
     population_file = "population_state.pkl"
 
-    # Vérifier si un fichier de sauvegarde existe
     if os.path.exists(population_file):
-        # Charger la population depuis le fichier
         with open(population_file, "rb") as f:
             population = pickle.load(f)
         print("Population chargée depuis '{}'.".format(population_file))
     else:
-        # Initialiser une nouvelle population
         population = [Agent(input_size=input_size) for _ in range(population_size)]
         print("Nouvelle population initialisée.")
 
     for generation in range(generations):
         print(f"Génération {generation + 1}/{generations}")
-        # Évaluation des agents
         scores = evaluate_agents(population, grid_size=grid_size, range_vision=range_vision)
         best_fitness = max(scores, key=lambda x: x[1])[1]
         average_fitness = sum(score for agent, score in scores) / len(scores)
         print(f"Meilleure fitness : {best_fitness}, Fitness moyenne : {average_fitness}")
 
-        # Sélection des agents
         selected_agents = select_agents(scores)
-        # Génération de la nouvelle population
         population = generate_new_population(selected_agents, population_size, input_size)
 
         # Sauvegarder la population toutes les 10 générations

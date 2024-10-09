@@ -5,8 +5,8 @@ from snake_game_logic import SnakeGameLogic
 from agent import Agent
 
 # Définir la même portée de vision utilisée lors de l'entraînement
-range_vision = 1  # Ajustez cette valeur si vous avez utilisé une autre portée
-input_size = (2 * range_vision + 1) ** 2 - 1
+range_vision = 1
+input_size = ((2 * range_vision + 1) ** 2 - 1) + 2  # Ajouter 2 pour la direction du fruit
 
 # Charger le génome du meilleur agent
 with open("best_agent_genome.txt", "r") as f:
