@@ -1,15 +1,13 @@
-# agent.py
-
 import random
 import math
 
 class Agent:
-    def __init__(self, input_size, hidden_size=10, genome=None):
+    def __init__(self, input_size, hidden_size=20, genome=None):
         self.input_size = input_size
         self.hidden_size = hidden_size
         self.output_size = 4  # 4 actions possibles: haut, bas, gauche, droite
         self.genome_length = (self.input_size * self.hidden_size) + (self.hidden_size * self.output_size)
-        
+
         if genome is None:
             # Initialisation aléatoire du génome
             self.genome = [random.uniform(-1, 1) for _ in range(self.genome_length)]
@@ -35,7 +33,7 @@ class Agent:
             weight_end = weight_start + self.input_size
             weights = self.weights_input_hidden[weight_start:weight_end]
             activation = sum(p * w for p, w in zip(perception, weights))
-            hidden.append(self.sigmoid(activation))
+            hidden.append(self.tanh(activation))
 
         # Couche cachée -> Sortie
         outputs = []
@@ -52,5 +50,5 @@ class Agent:
         action_index = random.choice(best_actions)
         return action_index
 
-    def sigmoid(self, x):
-        return 1 / (1 + math.exp(-x))
+    def tanh(self, x):
+        return math.tanh(x)

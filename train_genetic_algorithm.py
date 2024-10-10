@@ -1,12 +1,10 @@
-# train_genetic_algorithm.py
-
 import os
 import random
 import pickle
 from snake_game_logic import SnakeGameLogic
 from agent import Agent
 
-def evaluate_agents(population, grid_size=10, range_vision=1):
+def evaluate_agents(population, grid_size=10, range_vision=2):
     scores = []
     for agent in population:
         game = SnakeGameLogic(grid_size=grid_size, agent=agent, range_vision=range_vision)
@@ -53,8 +51,8 @@ def generate_new_population(selected_agents, population_size, input_size):
         new_population[random.randint(0, population_size - 1)] = Agent(input_size=input_size)
     return new_population
 
-def train_genetic_algorithm(generations=50, population_size=100, grid_size=10, range_vision=1):
-    input_size = ((2 * range_vision + 1) ** 2 - 1) + 2  # Ajouter 2 pour la direction du fruit
+def train_genetic_algorithm(generations=500, population_size=100, grid_size=10, range_vision=2):
+    input_size = ((2 * range_vision + 1) ** 2 - 1) + 2  # Calculer le input_size pour range_vision=2
 
     population_file = "population_state.pkl"
 

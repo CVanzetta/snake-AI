@@ -1,14 +1,14 @@
-# snake_game_logic.py
-
 import random
 
 class SnakeGameLogic:
-    def __init__(self, grid_size=10, agent=None, range_vision=1):
+    def __init__(self, grid_size=10, agent=None, range_vision=2):
         self.grid_size = grid_size
+        self.range_vision = range_vision
+        center = grid_size // 2
         self.snake = [
-            [grid_size // 2, grid_size // 2],
-            [grid_size // 2, grid_size // 2 - 1],
-            [grid_size // 2, grid_size // 2 - 2]
+            [center, center],
+            [center, center - 1],
+            [center, center - 2]
         ]
         self.direction = [0, 1]  # Mouvement initial vers la droite
         self.fruit = self.generate_fruit()
@@ -17,12 +17,10 @@ class SnakeGameLogic:
         self.running = True
         self.steps = 0
         self.max_steps = grid_size * grid_size * 4
-        self.range_vision = range_vision  # Portée du champ de vision
-        self.total_distance_to_fruit = 0  # Pour calculer la distance totale au fruit
-
-        # Attributs pour détecter les mouvements répétitifs
+        self.total_distance_to_fruit = 0
         self.last_moves = []
-        self.max_last_moves = 4  # Taille de la fenêtre pour détecter les boucles
+        self.max_last_moves = 4
+        self.collisions = 0  # Nouveau compteur pour suivre les collisions
 
     def generate_fruit(self):
         while True:
@@ -33,26 +31,26 @@ class SnakeGameLogic:
     def get_perception(self):
         head = self.snake[0]
         perception = []
-        # Perception des cases autour du serpent
-        for dx in range(-self.range_vision, self.range_vision + 1):
-            for dy in range(-self.range_vision, self.range_vision + 1):
-                if dx == 0 and dy == 0:
-                    continue  # Ignorer la position de la tête du serpent
-                x, y = head[0] + dx, head[1] + dy
-                if x < 0 or x >= self.grid_size or y < 0 or y >= self.grid_size:
-                    perception.append(-1)  # Mur
-                elif [x, y] in self.snake:
-                    perception.append(-1)  # Corps du serpent
-                elif [x, y] == self.fruit:
-                    perception.append(1)   # Fruit
-                else:
-                    perception.append(0)   # Case vide
+
+        # Ajouter la direction actuelle du serpent
+        perception.extend(self.direction)
+
         # Ajouter la direction relative du fruit
         fruit_direction = [
             (self.fruit[0] - head[0]) / self.grid_size,  # Différence normalisée en X
             (self.fruit[1] - head[1]) / self.grid_size   # Différence normalisée en Y
         ]
         perception.extend(fruit_direction)
+
+        # Capteurs pour les obstacles dans les directions cardinales (haut, bas, gauche, droite)
+        directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+        for dx, dy in directions:
+            x, y = head[0] + dx, head[1] + dy
+            if x < 0 or x >= self.grid_size or y < 0 or y >= self.grid_size or [x, y] in self.snake:
+                perception.append(1)  # Obstacle
+            else:
+                perception.append(0)  # Pas d'obstacle
+
         return perception
 
     def update(self):
@@ -63,7 +61,7 @@ class SnakeGameLogic:
         if self.agent is not None:
             perception = self.get_perception()
             action_index = self.agent.decide(perception)
-            directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+            directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]  # Haut, Bas, Gauche, Droite
             self.direction = directions[action_index]
 
         # Mise à jour de la position du serpent
@@ -77,6 +75,7 @@ class SnakeGameLogic:
             or new_head[1] < 0
             or new_head[1] >= self.grid_size
         ):
+            self.collisions += 1
             self.running = False
             return
 
@@ -109,8 +108,9 @@ class SnakeGameLogic:
         if len(self.last_moves) < self.max_last_moves:
             return 0
         else:
-            return self.last_moves.count(self.last_moves[0]) == self.max_last_moves
+            return sum(1 for move in self.last_moves if move == self.last_moves[0]) == self.max_last_moves
 
     def play(self):
         while self.running:
             self.update()
+        print(f"Partie terminée. Score: {self.score}, Steps: {self.steps}, Collisions: {self.collisions}")

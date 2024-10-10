@@ -1,17 +1,26 @@
-# snake_game.py
-
 import tkinter as tk
 from snake_game_logic import SnakeGameLogic
 from agent import Agent
 
 # Définir la même portée de vision utilisée lors de l'entraînement
-range_vision = 1
-input_size = ((2 * range_vision + 1) ** 2 - 1) + 2  # Ajouter 2 pour la direction du fruit
+range_vision = 2
+input_size = 8  # Mise à jour pour correspondre à la nouvelle logique de perception
 
 # Charger le génome du meilleur agent
 with open("best_agent_genome.txt", "r") as f:
     genome_str = f.read()
+
+# Assurez-vous que le génome n'est pas vide
+if not genome_str.strip():
+    raise ValueError("Le fichier du génome est vide. Assurez-vous d'avoir un génome valide.")
+
 best_genome = list(map(float, genome_str.strip().split(",")))
+
+# Assurez-vous que la longueur du génome est correcte
+expected_genome_length = (input_size * 20) + (20 * 4)  # input_size * hidden_size + hidden_size * output_size
+if len(best_genome) != expected_genome_length:
+    raise ValueError(f"Le génome chargé a une longueur incorrecte : {len(best_genome)}. Attendu : {expected_genome_length}.")
+
 best_agent = Agent(input_size=input_size, genome=best_genome)
 
 class SnakeGameGUI:
